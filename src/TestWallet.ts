@@ -1,4 +1,12 @@
-import { InMemorySigner, KeyPair, keyStores, transactions as nearTransactions } from "near-api-js";
+import {
+  InMemorySigner,
+  KeyPair,
+  keyStores,
+  providers,
+  utils,
+  transactions as nearTransactions
+} from "near-api-js";
+import { AccessKeyView } from "near-api-js/lib/providers/provider";
 // @ts-ignore.
 import { parseSeedPhrase } from "near-seed-phrase";
 
@@ -162,6 +170,99 @@ export function TestWallet(): Wallet {
       }
 
       return signedTxs;
+    },
+    signIn: async ({ permission, accounts }) => {
+      const approved = confirm([
+        `Permission to sign in to ${permission.receiverId} with the following accounts:`,
+        accounts.map((account) => `- ${account.accountId}`),
+      ].join("\n"));
+
+      if (!approved) {
+        throw new Error("User rejected sign in");
+      }
+
+      const provider = new providers.JsonRpcProvider({ url: network.nodeUrl });
+      const block = await provider.block({ finality: "final" });
+
+      for (let i = 0; i < accounts.length; i += 1) {
+        const account = accounts[i];
+
+        const keyPair = await keyStore.getKey(network.networkId, account.accountId);
+        const accessKey = await provider.query<AccessKeyView>({
+          request_type: "view_access_key",
+          finality: "final",
+          account_id: account.accountId,
+          public_key: keyPair.getPublicKey().toString(),
+        });
+
+        const transaction = nearTransactions.createTransaction(
+          account.accountId,
+          keyPair.getPublicKey(),
+          account.accountId,
+          accessKey.nonce + i + 1,
+          [nearTransactions.addKey(
+            utils.PublicKey.from(account.publicKey),
+            nearTransactions.functionCallAccessKey(
+              permission.receiverId,
+              permission.methodNames,
+              permission.allowance
+            )
+          )],
+          utils.serialize.base_decode(block.header.hash)
+        );
+
+        const [, signedTx] = await nearTransactions.signTransaction(
+          transaction,
+          signer,
+          transaction.signerId,
+          network.networkId
+        );
+
+        await provider.sendTransaction(signedTx);
+      }
+    },
+    signOut: async ({ accounts }) => {
+      const approved = confirm([
+        `Permission to sign out of the following accounts:`,
+        accounts.map((account) => `- ${account.accountId}`),
+      ].join("\n"));
+
+      if (!approved) {
+        throw new Error("User rejected sign out");
+      }
+
+      const provider = new providers.JsonRpcProvider({ url: network.nodeUrl });
+      const block = await provider.block({ finality: "final" });
+
+      for (let i = 0; i < accounts.length; i += 1) {
+        const account = accounts[i];
+
+        const keyPair = await keyStore.getKey(network.networkId, account.accountId);
+        const accessKey = await provider.query<AccessKeyView>({
+          request_type: "view_access_key",
+          finality: "final",
+          account_id: account.accountId,
+          public_key: keyPair.getPublicKey().toString(),
+        });
+
+        const transaction = nearTransactions.createTransaction(
+          account.accountId,
+          keyPair.getPublicKey(),
+          account.accountId,
+          accessKey.nonce + i + 1,
+          [nearTransactions.deleteKey(utils.PublicKey.from(account.publicKey))],
+          utils.serialize.base_decode(block.header.hash)
+        );
+
+        const [, signedTx] = await nearTransactions.signTransaction(
+          transaction,
+          signer,
+          transaction.signerId,
+          network.networkId
+        );
+
+        await provider.sendTransaction(signedTx);
+      }
     },
     on: () => {
       throw new Error("Not implemented");
