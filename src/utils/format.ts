@@ -4,7 +4,6 @@ export const formatTransaction = (transaction: transactions.Transaction) => {
   return {
     signerId: transaction.signerId,
     receiverId: transaction.receiverId,
-    publicKey: transaction.publicKey.toString(),
     actions: transaction.actions.map((action) => {
       switch (action.enum) {
         case "createAccount": {
