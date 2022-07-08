@@ -7,10 +7,12 @@ declare global {
   }
 }
 
-if (!window.near) {
-  window.near = {};
-}
+setTimeout(() => {
+  if (!window.near) {
+    window.near = {};
+  }
 
-window.near.wallet = TestWallet();
+  window.near.wallet = TestWallet();
 
-console.log("Successfully injected test wallet under window.near.wallet");
+  console.log("Successfully injected test wallet under window.near.wallet");
+}, 500);
