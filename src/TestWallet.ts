@@ -46,6 +46,9 @@ export function TestWallet(): Wallet {
     get _keyStore() {
       return keyStore;
     },
+    get id() {
+      return "wallet";
+    },
     get connected() {
       return Boolean(state.accounts.length);
     },
