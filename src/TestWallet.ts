@@ -16,7 +16,9 @@ const loadState = (): WalletState => {
   const state = storage.getJsonItem<WalletState>("wallet_state");
 
   if (!state) {
-    return {};
+    return {
+      accounts: [],
+    };
   }
 
   return state;
@@ -45,13 +47,13 @@ export function TestWallet(): Wallet {
       return keyStore;
     },
     get connected() {
-      return false;
+      return Boolean(state.accounts.length);
     },
     get network() {
       return { ...network };
     },
     get accounts() {
-      return [];
+      return [ ...state.accounts ];
     },
     // Exposed for testing
     _restore: async ({ accountId, mnemonic }) => {
@@ -71,6 +73,42 @@ export function TestWallet(): Wallet {
       );
 
       console.log("Successfully restored account", { accountId, publicKey });
+    },
+    connect: async () => {
+      const accountIds = await keyStore.getAccounts(network.networkId);
+      const total = accountIds.length;
+
+      console.log(`There are ${total} accounts(s) imported`);
+
+      const accounts = await Promise.all(accountIds.map(async (accountId) => {
+        const keyPair = await keyStore.getKey(network.networkId, accountId);
+
+        return {
+          accountId,
+          publicKey: keyPair.getPublicKey().toString(),
+        };
+      }))
+
+      setState((prevState) => ({
+        ...prevState,
+        accounts,
+      }));
+
+      console.log("Selected all account(s)");
+    },
+    disconnect: async () => {
+      if (!state.accounts.length) {
+        throw new Error("Not connected");
+      }
+
+      const total = state.accounts.length;
+
+      setState((prevState) => ({
+        ...prevState,
+        accounts: [],
+      }));
+
+      console.log(`Removed visibility of ${total} account(s)`);
     },
     on: () => {
       throw new Error("Not implemented");
