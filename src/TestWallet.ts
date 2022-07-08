@@ -1,4 +1,4 @@
-import { InMemorySigner, KeyPair, keyStores, transactions } from "near-api-js";
+import { InMemorySigner, KeyPair, keyStores, transactions as nearTransactions } from "near-api-js";
 // @ts-ignore.
 import { parseSeedPhrase } from "near-seed-phrase";
 
@@ -120,18 +120,14 @@ export function TestWallet(): Wallet {
 
       const approved = confirm([
         "Permission to sign transaction?",
-        "",
-        `Signer ID: ${formattedTx.signerId}`,
-        `Receiver ID: ${formattedTx.receiverId}`,
-        "Actions:",
-        ...(formattedTx.actions.map((a) => JSON.stringify(a, null, 2)))
+        JSON.stringify(formattedTx, null, 2),
       ].join("\n"))
 
       if (!approved) {
         throw new Error("User rejected signing");
       }
 
-      const [, signedTx] = await transactions.signTransaction(
+      const [, signedTx] = await nearTransactions.signTransaction(
         transaction,
         signer,
         transaction.signerId,
@@ -139,6 +135,33 @@ export function TestWallet(): Wallet {
       );
 
       return signedTx;
+    },
+    signTransactions: async ({ transactions }) => {
+      const formattedTxs = transactions.map(format.formatTransaction);
+      const signedTxs: Array<nearTransactions.SignedTransaction> = [];
+
+      const approved = confirm([
+        "Permission to sign transactions?",
+        JSON.stringify(formattedTxs, null, 2),
+      ].join("\n"))
+
+      if (!approved) {
+        throw new Error("User rejected signing");
+      }
+
+      for (let i = 0; i < transactions.length; i += 1) {
+        const transaction = transactions[i];
+        const [, signedTx] = await nearTransactions.signTransaction(
+          transaction,
+          signer,
+          transaction.signerId,
+          network.networkId
+        );
+
+        signedTxs.push(signedTx);
+      }
+
+      return signedTxs;
     },
     on: () => {
       throw new Error("Not implemented");
