@@ -6,6 +6,7 @@ import { Network, Wallet } from "./Wallet.types";
 import { WalletState } from "./TestWallet.types";
 import * as storage from "./utils/storage";
 import * as restore from "./utils/restore";
+import * as format from "./utils/format";
 
 const network: Network = {
   networkId: "testnet",
@@ -115,6 +116,21 @@ export function TestWallet(): Wallet {
       console.log(`Removed visibility of ${total} account(s)`);
     },
     signTransaction: async ({ transaction }) => {
+      const formattedTx = format.formatTransaction(transaction);
+
+      const approved = confirm([
+        "Permission to sign transaction?",
+        "",
+        `Signer ID: ${formattedTx.signerId}`,
+        `Receiver ID: ${formattedTx.receiverId}`,
+        "Actions:",
+        ...(formattedTx.actions.map((a) => JSON.stringify(a, null, 2)))
+      ].join("\n"))
+
+      if (!approved) {
+        throw new Error("User rejected signing");
+      }
+
       const [, signedTx] = await transactions.signTransaction(
         transaction,
         signer,
