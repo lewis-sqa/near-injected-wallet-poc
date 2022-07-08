@@ -1,4 +1,4 @@
-import { transactions, providers, utils } from "near-api-js";
+import { keyStores, transactions, providers, utils } from "near-api-js";
 import { AccessKeyView } from "near-api-js/lib/providers/provider";
 
 import { TestWallet } from "./TestWallet";
@@ -118,6 +118,72 @@ setTimeout(() => {
       // Send the transaction to the blockchain.
       await provider.sendTransaction(signedTx);
     }
+  };
+
+  // @ts-ignore
+  window._testSignIn = async () => {
+    // Setup keystore to locally store FunctionCall access keys.
+    const keystore = new keyStores.BrowserLocalStorageKeyStore(
+      window.localStorage,
+      "dapp:keystore:"
+    );
+
+    // Retrieve the list of accounts we have visibility of.
+    const { accounts, network } = window.near.wallet;
+
+    if (!accounts.length) {
+      throw new Error("No accounts to sign in to");
+    }
+
+    // Request FunctionCall access to the 'guest-book.testnet' smart contract for each account.
+    await window.near.wallet.signIn({
+      permission: {
+        receiverId: "guest-book.testnet",
+        methodNames: [],
+      },
+      accounts: await Promise.all(
+        accounts.map(async ({ accountId }) => {
+          const keyPair = utils.KeyPair.fromRandom("ed25519");
+          await keystore.setKey(network.networkId, accountId, keyPair);
+
+          return {
+            accountId,
+            publicKey: keyPair.getPublicKey().toString()
+          };
+      })
+      ),
+    });
+  };
+
+  // @ts-ignore
+  window._testSignOut = async () => {
+    // Setup keystore to retrieve locally stored FunctionCall access keys.
+    const keystore = new keyStores.BrowserLocalStorageKeyStore(
+      window.localStorage,
+      "dapp:keystore:"
+    );
+
+    // Retrieve current network and accounts with FunctionCall access keys.
+    const { network } = window.near.wallet;
+    const accountIds = await keystore.getAccounts(network.networkId);
+
+    if (!accountIds.length) {
+      throw new Error("No accounts to sign out of");
+    }
+
+    // Remove FunctionCall access (previously granted via signIn) for each account.
+    await window.near.wallet.signOut({
+      accounts: await Promise.all(
+        accountIds.map(async (accountId) => {
+          const keyPair = await keystore.getKey(network.networkId, accountId);
+
+          return {
+            accountId,
+            publicKey: keyPair.getPublicKey().toString()
+          };
+        })
+      ),
+    });
   };
 
   console.log("Successfully injected test wallet under window.near.wallet");
