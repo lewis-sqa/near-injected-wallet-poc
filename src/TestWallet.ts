@@ -1,4 +1,4 @@
-import { KeyPair, keyStores } from "near-api-js";
+import { InMemorySigner, KeyPair, keyStores, transactions } from "near-api-js";
 // @ts-ignore.
 import { parseSeedPhrase } from "near-seed-phrase";
 
@@ -26,6 +26,7 @@ const loadState = (): WalletState => {
 
 export function TestWallet(): Wallet {
   const keyStore = new keyStores.BrowserLocalStorageKeyStore();
+  const signer = new InMemorySigner(keyStore);
   let state = loadState();
 
   const setState = (reducer: (prevState: WalletState) => WalletState) => {
@@ -112,6 +113,16 @@ export function TestWallet(): Wallet {
       }));
 
       console.log(`Removed visibility of ${total} account(s)`);
+    },
+    signTransaction: async ({ transaction }) => {
+      const [, signedTx] = await transactions.signTransaction(
+        transaction,
+        signer,
+        transaction.signerId,
+        network.networkId
+      );
+
+      return signedTx;
     },
     on: () => {
       throw new Error("Not implemented");
