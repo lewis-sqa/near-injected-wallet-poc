@@ -91,6 +91,10 @@ export function TestWallet(): Wallet {
       const accountIds = await keyStore.getAccounts(network.networkId);
       const total = accountIds.length;
 
+      if (!total) {
+        throw new Error("No accounts imported. Use window.near.wallet._restore to import accounts");
+      }
+
       console.log(`There are ${total} accounts(s) imported`);
 
       const accounts = await Promise.all(accountIds.map(async (accountId) => {
