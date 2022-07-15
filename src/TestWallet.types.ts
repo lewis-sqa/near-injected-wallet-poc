@@ -1,5 +1,8 @@
-import { Account } from "./Wallet.types";
+export interface AccountState {
+  accountId: string;
+  publicKey: string;
+}
 
 export interface WalletState {
-  accounts: Array<Account>;
+  accounts: Array<AccountState>;
 }

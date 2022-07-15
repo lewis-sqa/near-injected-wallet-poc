@@ -85,7 +85,7 @@ setTimeout(() => {
       transactions: [
         transactions.createTransaction(
           accounts[0].accountId,
-          utils.PublicKey.from(accounts[0].publicKey),
+          accounts[0].publicKey,
           "guest-book.testnet",
           accessKey.nonce + 1,
           [transactions.functionCall(
@@ -98,7 +98,7 @@ setTimeout(() => {
         ),
         transactions.createTransaction(
           accounts[0].accountId,
-          utils.PublicKey.from(accounts[0].publicKey),
+          accounts[0].publicKey,
           "guest-book.testnet",
           accessKey.nonce + 2,
           [transactions.functionCall(
@@ -148,7 +148,7 @@ setTimeout(() => {
 
           return {
             accountId,
-            publicKey: keyPair.getPublicKey().toString()
+            publicKey: keyPair.getPublicKey()
           };
       })
       ),
@@ -179,7 +179,7 @@ setTimeout(() => {
 
           return {
             accountId,
-            publicKey: keyPair.getPublicKey().toString()
+            publicKey: keyPair.getPublicKey()
           };
         })
       ),

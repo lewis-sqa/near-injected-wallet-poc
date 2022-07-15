@@ -66,7 +66,10 @@ export function TestWallet(): Wallet {
       return { ...network };
     },
     get accounts() {
-      return [ ...state.accounts ];
+      return state.accounts.map((account) => ({
+        ...account,
+        publicKey: utils.PublicKey.from(account.publicKey)
+      }));
     },
     // Exposed for testing
     _restore: async ({ accountId, mnemonic }) => {
@@ -102,16 +105,21 @@ export function TestWallet(): Wallet {
 
         return {
           accountId,
-          publicKey: keyPair.getPublicKey().toString(),
+          publicKey: keyPair.getPublicKey(),
         };
       }))
 
       setState((prevState) => ({
         ...prevState,
-        accounts,
+        accounts: accounts.map((account) => ({
+          ...account,
+          publicKey: account.publicKey.toString()
+        })),
       }));
 
       console.log("Selected all account(s)");
+
+      return accounts;
     },
     disconnect: async () => {
       if (!state.accounts.length) {

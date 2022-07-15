@@ -1,8 +1,8 @@
-import { transactions } from "near-api-js";
+import { transactions, utils } from "near-api-js";
 
 export interface Account {
   accountId: string;
-  publicKey: string;
+  publicKey: utils.PublicKey;
 }
 
 export interface Network {
@@ -47,7 +47,7 @@ export interface Wallet {
 
   _restore(params: RestoreParams): Promise<void>;
 
-  connect(): Promise<void>;
+  connect(): Promise<Array<Account>>;
   signIn(params: SignInParams): Promise<void>;
   signOut(params: SignOutParams): Promise<void>;
   signTransaction(params: SignTransactionParams): Promise<transactions.SignedTransaction>;
