@@ -147,10 +147,11 @@ export function TestWallet(): Wallet {
         throw new Error("User rejected signing");
       }
 
+      const tx = nearTransactions.Transaction.decode(Buffer.from(transaction.encode()));
       const [, signedTx] = await nearTransactions.signTransaction(
-        transaction,
+        tx,
         signer,
-        transaction.signerId,
+        tx.signerId,
         network.networkId
       );
 
@@ -170,11 +171,11 @@ export function TestWallet(): Wallet {
       }
 
       for (let i = 0; i < transactions.length; i += 1) {
-        const transaction = transactions[i];
+        const tx = nearTransactions.Transaction.decode(Buffer.from(transactions[i].encode()));
         const [, signedTx] = await nearTransactions.signTransaction(
-          transaction,
+          tx,
           signer,
-          transaction.signerId,
+          tx.signerId,
           network.networkId
         );
 
