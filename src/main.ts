@@ -35,14 +35,14 @@ setTimeout(() => {
         request_type: "view_access_key",
         finality: "final",
         account_id: accounts[0].accountId,
-        public_key: accounts[0].publicKey,
+        public_key: accounts[0].publicKey.toString(),
       }),
     ]);
 
     const signedTx = await window.near.wallet.signTransaction({
       transaction: transactions.createTransaction(
         accounts[0].accountId,
-        utils.PublicKey.from(accounts[0].publicKey),
+        accounts[0].publicKey,
         "guest-book.testnet",
         accessKey.nonce + 1,
         [transactions.functionCall(
@@ -77,7 +77,7 @@ setTimeout(() => {
         request_type: "view_access_key",
         finality: "final",
         account_id: accounts[0].accountId,
-        public_key: accounts[0].publicKey,
+        public_key: accounts[0].publicKey.toString(),
       }),
     ]);
 
